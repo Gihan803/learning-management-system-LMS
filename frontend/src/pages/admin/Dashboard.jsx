@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import API from '../../api/axios';
 import Navbar from '../../components/Navbar';
+import StatGrid from '../../components/admin/StatGrid';
+import InstructorsTable from '../../components/admin/InstructorsTable';
+import StudentsTable from '../../components/admin/StudentsTable';
+import CoursesTable from '../../components/admin/CoursesTable';
 
 export default function AdminDashboard() {
     const [analytics, setAnalytics] = useState(null);
@@ -78,6 +82,9 @@ export default function AdminDashboard() {
 
     if (loading) return <><Navbar /><div className="loading-screen"><div className="spinner"></div></div></>;
 
+    const pendingCourses = courses.filter(c => c.status === 'pending');
+    const pendingInstructors = instructors.filter(i => !i.is_approved);
+
     return (
         <>
             <Navbar />
@@ -102,234 +109,55 @@ export default function AdminDashboard() {
                     </button>
                 </div>
 
-                {tab === 'analytics' && analytics && (
-                    <div className="stats-grid stats-grid-wide">
-                        <div className="stat-card stat-primary">
-                            <div className="stat-number">{analytics.total_users}</div>
-                            <div className="stat-label">Total Users</div>
-                        </div>
-                        <div className="stat-card stat-info">
-                            <div className="stat-number">{analytics.total_students}</div>
-                            <div className="stat-label">Students</div>
-                        </div>
-                        <div className="stat-card stat-warning">
-                            <div className="stat-number">{analytics.total_instructors}</div>
-                            <div className="stat-label">Instructors</div>
-                        </div>
-                        <div className="stat-card stat-success">
-                            <div className="stat-number">{analytics.approved_instructors}</div>
-                            <div className="stat-label">Approved Instructors</div>
-                        </div>
-                        <div className="stat-card stat-primary">
-                            <div className="stat-number">{analytics.total_courses}</div>
-                            <div className="stat-label">Total Courses</div>
-                        </div>
-                        <div className="stat-card stat-success">
-                            <div className="stat-number">{analytics.approved_courses}</div>
-                            <div className="stat-label">Approved Courses</div>
-                        </div>
-                        <div className="stat-card stat-warning">
-                            <div className="stat-number">{analytics.pending_courses}</div>
-                            <div className="stat-label">Pending Courses</div>
-                        </div>
-                        <div className="stat-card stat-info">
-                            <div className="stat-number">{analytics.total_enrollments}</div>
-                            <div className="stat-label">Total Enrollments</div>
-                        </div>
-                        <div className="stat-card stat-success">
-                            <div className="stat-number">{analytics.completed_enrollments}</div>
-                            <div className="stat-label">Completed Enrollments</div>
-                        </div>
-                    </div>
-                )}
+                {tab === 'analytics' && (
+                    <>
+                        <StatGrid analytics={analytics} />
 
-                {tab === 'analytics' && courses.some(c => c.status === 'pending') && (
-                    <div className="mt-2">
-                        <h3>⚠️ Pending Course Approvals</h3>
-                        <div className="table-container mt-1">
-                            <table className="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Course Title</th>
-                                        <th>Instructor</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {courses.filter(c => c.status === 'pending').map(course => (
-                                        <tr key={course.id}>
-                                            <td>{course.title}</td>
-                                            <td>{course.instructor?.name}</td>
-                                            <td>
-                                                <button onClick={() => handleApproveCourse(course.id)} className="btn btn-success btn-sm mr-05">
-                                                    Approve
-                                                </button>
-                                                <button onClick={() => handleRejectCourse(course.id)} className="btn btn-danger btn-sm">
-                                                    Reject
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                )}
+                        {pendingCourses.length > 0 && (
+                            <div className="mt-2">
+                                <h3>⚠️ Pending Course Approvals</h3>
+                                <CoursesTable 
+                                    courses={pendingCourses} 
+                                    onApprove={handleApproveCourse} 
+                                    onReject={handleRejectCourse} 
+                                />
+                            </div>
+                        )}
 
-                {tab === 'analytics' && instructors.some(i => !i.is_approved) && (
-                    <div className="mt-2">
-                        <h3>⚠️ Pending Instructor Approvals</h3>
-                        <div className="table-container mt-1">
-                            <table className="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Instructor Name</th>
-                                        <th>Email</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {instructors.filter(i => !i.is_approved).map(inst => (
-                                        <tr key={inst.id}>
-                                            <td>{inst.name}</td>
-                                            <td>{inst.email}</td>
-                                            <td>
-                                                <button onClick={() => handleApproveInstructor(inst.id)} className="btn btn-success btn-sm mr-05">
-                                                    Approve
-                                                </button>
-                                                <button onClick={() => handleRejectInstructor(inst.id)} className="btn btn-danger btn-sm">
-                                                    Reject
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                        {pendingInstructors.length > 0 && (
+                            <div className="mt-2">
+                                <h3>⚠️ Pending Instructor Approvals</h3>
+                                <InstructorsTable 
+                                    instructors={pendingInstructors} 
+                                    onApprove={handleApproveInstructor} 
+                                    onReject={handleRejectInstructor} 
+                                />
+                            </div>
+                        )}
+                    </>
                 )}
 
                 {tab === 'instructors' && (
-                    <div className="table-container">
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Courses</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {instructors.map((inst) => (
-                                    <tr key={inst.id}>
-                                        <td>{inst.name}</td>
-                                        <td>{inst.email}</td>
-                                        <td>{inst.courses_count}</td>
-                                        <td>
-                                            <span className={`badge ${inst.is_approved ? 'badge-success' : 'badge-warning'}`}>
-                                                {inst.is_approved ? 'Approved' : 'Pending'}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            {!inst.is_approved ? (
-                                                <button onClick={() => handleApproveInstructor(inst.id)} className="btn btn-success btn-sm">
-                                                    Approve
-                                                </button>
-                                            ) : (
-                                                <button onClick={() => handleRejectInstructor(inst.id)} className="btn btn-danger btn-sm">
-                                                    Revoke
-                                                </button>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                    <InstructorsTable 
+                        instructors={instructors} 
+                        onApprove={handleApproveInstructor} 
+                        onReject={handleRejectInstructor} 
+                    />
                 )}
 
                 {tab === 'students' && (
-                    <div className="table-container">
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Enrollments</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {students.map((student) => (
-                                    <tr key={student.id}>
-                                        <td>{student.name}</td>
-                                        <td>{student.email}</td>
-                                        <td>{student.enrollments_count}</td>
-                                        <td>
-                                            <span className={`badge ${student.is_blocked ? 'badge-danger' : 'badge-success'}`}>
-                                                {student.is_blocked ? 'Blocked' : 'Active'}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <button
-                                                onClick={() => handleToggleBlock(student.id)}
-                                                className={`btn btn-sm ${student.is_blocked ? 'btn-success' : 'btn-danger'}`}
-                                            >
-                                                {student.is_blocked ? 'Unblock' : 'Block'}
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                    <StudentsTable 
+                        students={students} 
+                        onToggleBlock={handleToggleBlock} 
+                    />
                 )}
 
                 {tab === 'courses' && (
-                    <div className="table-container">
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Title</th>
-                                    <th>Instructor</th>
-                                    <th>Materials</th>
-                                    <th>Enrollments</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {courses.map((course) => (
-                                    <tr key={course.id}>
-                                        <td>{course.title}</td>
-                                        <td>{course.instructor?.name}</td>
-                                        <td>{course.materials_count}</td>
-                                        <td>{course.enrollments_count}</td>
-                                        <td>
-                                            <span className={`badge ${course.status === 'approved' ? 'badge-success' : course.status === 'rejected' ? 'badge-danger' : 'badge-warning'}`}>
-                                                {course.status}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            {course.status !== 'approved' && (
-                                                <button onClick={() => handleApproveCourse(course.id)} className="btn btn-success btn-sm mr-05">
-                                                    Approve
-                                                </button>
-                                            )}
-                                            {course.status !== 'rejected' && (
-                                                <button onClick={() => handleRejectCourse(course.id)} className="btn btn-danger btn-sm">
-                                                    Reject
-                                                </button>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                    <CoursesTable 
+                        courses={courses} 
+                        onApprove={handleApproveCourse} 
+                        onReject={handleRejectCourse} 
+                    />
                 )}
             </div>
         </>
