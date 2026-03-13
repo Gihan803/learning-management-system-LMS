@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\InstructorController;
+use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\StudentController;
 use Illuminate\Support\Facades\Route;
 
@@ -14,6 +15,11 @@ Route::post('/login', [AuthController::class , 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class , 'logout']);
     Route::get('/user', [AuthController::class , 'user']);
+
+    // Profile routes
+    Route::put('/profile/name', [ProfileController::class, 'updateName']);
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword']);
+    Route::post('/profile/picture', [ProfileController::class, 'updateProfilePicture']);
 
     // Student routes
     Route::middleware('role:student')->group(function () {

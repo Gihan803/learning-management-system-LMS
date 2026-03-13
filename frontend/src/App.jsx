@@ -7,6 +7,7 @@ import StudentDashboard from './pages/student/Dashboard';
 import CourseDetail from './pages/student/CourseDetail';
 import InstructorDashboard from './pages/instructor/Dashboard';
 import AdminDashboard from './pages/admin/Dashboard';
+import Profile from './pages/Profile';
 
 function App() {
     return (
@@ -39,6 +40,13 @@ function App() {
                     <Route path="/admin/dashboard" element={
                         <ProtectedRoute roles={['admin']}>
                             <AdminDashboard />
+                        </ProtectedRoute>
+                    } />
+
+                    {/* Shared Routes */}
+                    <Route path="/profile" element={
+                        <ProtectedRoute roles={['student', 'instructor', 'admin']}>
+                            <Profile />
                         </ProtectedRoute>
                     } />
 

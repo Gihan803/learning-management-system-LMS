@@ -28,13 +28,19 @@ export default function Navbar() {
 
             {user && (
                 <div className="navbar-right">
-                    <div className="user-info">
-                        <span className="user-avatar">{user.name.charAt(0).toUpperCase()}</span>
-                        <div className="user-details">
-                            <span className="user-name">{user.name}</span>
-                            <span className="user-role">{user.role}</span>
+                    <Link to="/profile" className="user-info-link">
+                        <div className="user-info">
+                            <img 
+                                src={user.profile_picture_url} 
+                                alt={user.name} 
+                                className="user-avatar-img"
+                            />
+                            <div className="user-details">
+                                <span className="user-name">{user.name}</span>
+                                <span className="user-role">{user.role}</span>
+                            </div>
                         </div>
-                    </div>
+                    </Link>
                     <button onClick={handleLogout} className="btn btn-outline btn-sm">
                         Logout
                     </button>

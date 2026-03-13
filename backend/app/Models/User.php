@@ -14,11 +14,14 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'profile_picture',
         'password',
         'role',
         'is_approved',
         'is_blocked',
     ];
+
+    protected $appends = ['profile_picture_url'];
 
     protected $hidden = [
         'password',
@@ -53,5 +56,13 @@ class User extends Authenticatable
     public function quizAttempts()
     {
         return $this->hasMany(QuizAttempt::class);
+    }
+
+    public function getProfilePictureUrlAttribute()
+    {
+        if ($this->profile_picture) {
+            return asset('storage/' . $this->profile_picture);
+        }
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&color=FDE68A&background=1E1E1E';
     }
 }
