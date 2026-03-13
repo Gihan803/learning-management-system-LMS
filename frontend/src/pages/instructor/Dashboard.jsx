@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react';
 import API from '../../api/axios';
 import Navbar from '../../components/Navbar';
 import { useAuth } from '../../contexts/AuthContext';
+import InstructorStatGrid from '../../components/instructor/InstructorStatGrid';
+import CourseCard from '../../components/instructor/CourseCard';
+import EnrolledStudentsTable from '../../components/instructor/EnrolledStudentsTable';
+import CreateCourseModal from '../../components/instructor/CreateCourseModal';
+import AddMaterialModal from '../../components/instructor/AddMaterialModal';
+import CreateQuizModal from '../../components/instructor/CreateQuizModal';
+import AddQuestionsModal from '../../components/instructor/AddQuestionsModal';
 
 export default function InstructorDashboard() {
     const { user } = useAuth();
@@ -137,20 +144,7 @@ export default function InstructorDashboard() {
                     )}
                 </div>
 
-                <div className="stats-grid">
-                    <div className="stat-card">
-                        <div className="stat-number">{courses.length}</div>
-                        <div className="stat-label">My Courses</div>
-                    </div>
-                    <div className="stat-card">
-                        <div className="stat-number">{courses.filter(c => c.status === 'approved').length}</div>
-                        <div className="stat-label">Approved</div>
-                    </div>
-                    <div className="stat-card">
-                        <div className="stat-number">{students.length}</div>
-                        <div className="stat-label">Students</div>
-                    </div>
-                </div>
+                <InstructorStatGrid courses={courses} students={students} />
 
                 <div className="tab-nav">
                     <button className={`tab-btn ${tab === 'courses' ? 'active' : ''}`} onClick={() => setTab('courses')}>
@@ -169,172 +163,18 @@ export default function InstructorDashboard() {
                             </button>
                         )}
 
-                        {/* Create Course Modal */}
-                        {showCreateCourse && (
-                            <div className="modal-overlay">
-                                <div className="modal">
-                                    <h3>Create New Course</h3>
-                                    <form onSubmit={handleCreateCourse}>
-                                        <div className="form-group">
-                                            <label>Course Title</label>
-                                            <input type="text" value={courseForm.title} onChange={(e) => setCourseForm({ ...courseForm, title: e.target.value })} required />
-                                        </div>
-                                        <div className="form-group">
-                                            <label>Description</label>
-                                            <textarea value={courseForm.description} onChange={(e) => setCourseForm({ ...courseForm, description: e.target.value })} rows={3}></textarea>
-                                        </div>
-                                        <div className="modal-actions">
-                                            <button type="submit" className="btn btn-primary">Create</button>
-                                            <button type="button" className="btn btn-outline" onClick={() => setShowCreateCourse(false)}>Cancel</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Add Material Modal */}
-                        {showAddMaterial && (
-                            <div className="modal-overlay">
-                                <div className="modal">
-                                    <h3>Add Material</h3>
-                                    <form onSubmit={handleAddMaterial}>
-                                        <div className="form-group">
-                                            <label>Title</label>
-                                            <input type="text" value={materialForm.title} onChange={(e) => setMaterialForm({ ...materialForm, title: e.target.value })} required />
-                                        </div>
-                                        <div className="form-group">
-                                            <label>Type</label>
-                                            <select value={materialForm.type} onChange={(e) => setMaterialForm({ ...materialForm, type: e.target.value })}>
-                                                <option value="video">Video Link</option>
-                                                <option value="pdf">PDF</option>
-                                            </select>
-                                        </div>
-                                        {materialForm.type === 'video' ? (
-                                            <div className="form-group">
-                                                <label>Video URL (YouTube link)</label>
-                                                <input type="url" value={materialForm.content_url} onChange={(e) => setMaterialForm({ ...materialForm, content_url: e.target.value })} required />
-                                            </div>
-                                        ) : (
-                                            <div className="form-group">
-                                                <label>Upload PDF Document</label>
-                                                <input type="file" accept=".pdf" onChange={(e) => setMaterialFile(e.target.files[0])} required />
-                                            </div>
-                                        )}
-                                        <div className="form-group">
-                                            <label>Sort Order</label>
-                                            <input type="number" value={materialForm.sort_order} onChange={(e) => setMaterialForm({ ...materialForm, sort_order: parseInt(e.target.value) })} />
-                                        </div>
-                                        <div className="modal-actions">
-                                            <button type="submit" className="btn btn-primary">Add Material</button>
-                                            <button type="button" className="btn btn-outline" onClick={() => { setShowAddMaterial(null); setMaterialFile(null); }}>Cancel</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Create Quiz Modal */}
-                        {showCreateQuiz && (
-                            <div className="modal-overlay">
-                                <div className="modal">
-                                    <h3>Create Quiz</h3>
-                                    <form onSubmit={handleCreateQuiz}>
-                                        <div className="form-group">
-                                            <label>Quiz Title</label>
-                                            <input type="text" value={quizForm.title} onChange={(e) => setQuizForm({ ...quizForm, title: e.target.value })} required />
-                                        </div>
-                                        <div className="modal-actions">
-                                            <button type="submit" className="btn btn-primary">Create & Add Questions</button>
-                                            <button type="button" className="btn btn-outline" onClick={() => setShowCreateQuiz(null)}>Cancel</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Add Questions Modal */}
-                        {showAddQuestions && (
-                            <div className="modal-overlay">
-                                <div className="modal modal-lg">
-                                    <h3>Add Questions</h3>
-                                    <form onSubmit={handleAddQuestions}>
-                                        {questions.map((q, idx) => (
-                                            <div key={idx} className="question-form-block">
-                                                <div className="question-form-header">
-                                                    <h4>Question {idx + 1}</h4>
-                                                    {questions.length > 1 && (
-                                                        <button type="button" className="btn btn-danger btn-sm" onClick={() => removeQuestion(idx)}>✕</button>
-                                                    )}
-                                                </div>
-                                                <div className="form-group">
-                                                    <label>Question Text</label>
-                                                    <input type="text" value={q.question_text} onChange={(e) => updateQuestion(idx, 'question_text', e.target.value)} required />
-                                                </div>
-                                                <div className="form-row">
-                                                    <div className="form-group">
-                                                        <label>Option A</label>
-                                                        <input type="text" value={q.option_a} onChange={(e) => updateQuestion(idx, 'option_a', e.target.value)} required />
-                                                    </div>
-                                                    <div className="form-group">
-                                                        <label>Option B</label>
-                                                        <input type="text" value={q.option_b} onChange={(e) => updateQuestion(idx, 'option_b', e.target.value)} required />
-                                                    </div>
-                                                </div>
-                                                <div className="form-row">
-                                                    <div className="form-group">
-                                                        <label>Option C</label>
-                                                        <input type="text" value={q.option_c} onChange={(e) => updateQuestion(idx, 'option_c', e.target.value)} required />
-                                                    </div>
-                                                    <div className="form-group">
-                                                        <label>Option D</label>
-                                                        <input type="text" value={q.option_d} onChange={(e) => updateQuestion(idx, 'option_d', e.target.value)} required />
-                                                    </div>
-                                                </div>
-                                                <div className="form-group">
-                                                    <label>Correct Answer</label>
-                                                    <select value={q.correct_option} onChange={(e) => updateQuestion(idx, 'correct_option', e.target.value)}>
-                                                        <option value="a">A</option>
-                                                        <option value="b">B</option>
-                                                        <option value="c">C</option>
-                                                        <option value="d">D</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        ))}
-                                        <button type="button" className="btn btn-outline mb-1" onClick={addQuestion}>+ Add Another Question</button>
-                                        <div className="modal-actions">
-                                            <button type="submit" className="btn btn-primary">Save Questions</button>
-                                            <button type="button" className="btn btn-outline" onClick={() => setShowAddQuestions(null)}>Cancel</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        )}
-
                         <div className="card-grid">
                             {courses.length === 0 ? (
                                 <div className="empty-state"><p>No courses yet. Create your first course!</p></div>
                             ) : (
                                 courses.map((course) => (
-                                    <div key={course.id} className="course-card">
-                                        <div className="course-card-header">
-                                            <h3>{course.title}</h3>
-                                            <span className={`badge ${course.status === 'approved' ? 'badge-success' : course.status === 'rejected' ? 'badge-danger' : 'badge-warning'}`}>
-                                                {course.status}
-                                            </span>
-                                        </div>
-                                        <p className="course-description">{course.description}</p>
-                                        <div className="course-stats">
-                                            <span>📄 {course.materials_count} materials</span>
-                                            <span>📝 {course.quizzes_count} quizzes</span>
-                                            <span>👥 {course.enrollments_count} enrolled</span>
-                                        </div>
-                                        <div className="course-actions">
-                                            <button onClick={() => setShowAddMaterial(course.id)} className="btn btn-outline btn-sm">+ Material</button>
-                                            <button onClick={() => setShowCreateQuiz(course.id)} className="btn btn-outline btn-sm">+ Quiz</button>
-                                            <button onClick={() => handleDeleteCourse(course.id)} className="btn btn-danger btn-sm">Delete</button>
-                                        </div>
-                                    </div>
+                                    <CourseCard 
+                                        key={course.id} 
+                                        course={course} 
+                                        onAddMaterial={setShowAddMaterial}
+                                        onCreateQuiz={setShowCreateQuiz}
+                                        onDelete={handleDeleteCourse}
+                                    />
                                 ))
                             )}
                         </div>
@@ -342,39 +182,45 @@ export default function InstructorDashboard() {
                 )}
 
                 {tab === 'students' && (
-                    <div className="table-container">
-                        {students.length === 0 ? (
-                            <div className="empty-state"><p>No students enrolled yet.</p></div>
-                        ) : (
-                            <table className="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Email</th>
-                                        <th>Enrolled Courses</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {students.map((student) => (
-                                        <tr key={student.id}>
-                                            <td>{student.name}</td>
-                                            <td>{student.email}</td>
-                                            <td>
-                                                {student.enrolled_courses?.map((ec) => (
-                                                    <span key={ec.course_id} className="badge badge-info mr-05">
-                                                        {ec.course_title}
-                                                        {ec.completed_at && ' ✓'}
-                                                    </span>
-                                                ))}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        )}
-                    </div>
+                    <EnrolledStudentsTable students={students} />
                 )}
             </div>
+
+            {/* Modals */}
+            <CreateCourseModal 
+                isOpen={showCreateCourse}
+                onClose={() => setShowCreateCourse(false)}
+                onSubmit={handleCreateCourse}
+                courseForm={courseForm}
+                setCourseForm={setCourseForm}
+            />
+
+            <AddMaterialModal 
+                courseId={showAddMaterial}
+                onClose={() => { setShowAddMaterial(null); setMaterialFile(null); }}
+                onSubmit={handleAddMaterial}
+                materialForm={materialForm}
+                setMaterialForm={setMaterialForm}
+                setMaterialFile={setMaterialFile}
+            />
+
+            <CreateQuizModal 
+                courseId={showCreateQuiz}
+                onClose={() => setShowCreateQuiz(null)}
+                onSubmit={handleCreateQuiz}
+                quizForm={quizForm}
+                setQuizForm={setQuizForm}
+            />
+
+            <AddQuestionsModal 
+                quizId={showAddQuestions}
+                onClose={() => setShowAddQuestions(null)}
+                onSubmit={handleAddQuestions}
+                questions={questions}
+                addQuestion={addQuestion}
+                updateQuestion={updateQuestion}
+                removeQuestion={removeQuestion}
+            />
         </>
     );
 }
